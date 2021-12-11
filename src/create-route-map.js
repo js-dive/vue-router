@@ -4,6 +4,7 @@ import Regexp from 'path-to-regexp'
 import { cleanPath } from './util/path'
 import { assert, warn } from './util/warn'
 
+// 创建路由表映射 - path映射、name映射
 export function createRouteMap (
   routes: Array<RouteConfig>,
   oldPathList?: Array<string>,
@@ -22,6 +23,7 @@ export function createRouteMap (
   // $flow-disable-line
   const nameMap: Dictionary<RouteRecord> = oldNameMap || Object.create(null)
 
+  // 遍历路由表
   routes.forEach(route => {
     addRouteRecord(pathList, pathMap, nameMap, route, parentRoute)
   })
@@ -62,9 +64,11 @@ function addRouteRecord (
   parent?: RouteRecord,
   matchAs?: string
 ) {
+  // 拿到路由项配置中的path、name
   const { path, name } = route
   if (process.env.NODE_ENV !== 'production') {
     assert(path != null, `"path" is required in a route configuration.`)
+    // ？？？
     assert(
       typeof route.component !== 'string',
       `route config "component" for path: ${String(
@@ -89,6 +93,7 @@ function addRouteRecord (
     pathToRegexpOptions.sensitive = route.caseSensitive
   }
 
+  // 将路由选项规范化为下列的record
   const record: RouteRecord = {
     path: normalizedPath,
     regex: compileRouteRegex(normalizedPath, pathToRegexpOptions),
@@ -114,6 +119,7 @@ function addRouteRecord (
           : { default: route.props }
   }
 
+  // 如果存在孩子，则递归调用
   if (route.children) {
     // Warn if route is named, does not redirect and has a default child route.
     // If users navigate to this route by name, the default child will
@@ -136,14 +142,17 @@ function addRouteRecord (
         )
       }
     }
+    // 递归调用，为子路由创建record
     route.children.forEach(child => {
       const childMatchAs = matchAs
         ? cleanPath(`${matchAs}/${child.path}`)
         : undefined
+      // 这里pathList、pathMap、nameMap都对应同一个变量，看起来就是把路由配置拉平了的感觉
       addRouteRecord(pathList, pathMap, nameMap, child, record, childMatchAs)
     })
   }
 
+  // 在pathMap中创建对应关系
   if (!pathMap[record.path]) {
     pathList.push(record.path)
     pathMap[record.path] = record
@@ -177,6 +186,7 @@ function addRouteRecord (
     }
   }
 
+  // 在nameMap中创建对应关系
   if (name) {
     if (!nameMap[name]) {
       nameMap[name] = record
@@ -208,13 +218,20 @@ function compileRouteRegex (
   return regex
 }
 
+// 根据path与parent，计算路径
 function normalizePath (
   path: string,
   parent?: RouteRecord,
   strict?: boolean
 ): string {
   if (!strict) path = path.replace(/\/$/, '')
-  if (path[0] === '/') return path
-  if (parent == null) return path
+  if (path[0] === '/') {
+    // 第一个字符为'/'，表示路径为绝对路径时，直接返回
+    return path
+  }
+  if (parent == null) {
+    // parent值不存在时，直接返回
+    return path
+  }
   return cleanPath(`${parent.path}/${path}`)
 }

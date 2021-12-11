@@ -69,6 +69,7 @@ export function parsePath (path: string): {
   }
 }
 
+// 把两个连续的/（类似//）替换为一个/
 export function cleanPath (path: string): string {
   return path.replace(/\/+/g, '/')
 }

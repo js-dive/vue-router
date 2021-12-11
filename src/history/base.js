@@ -79,6 +79,7 @@ export class History {
     this.errorCbs.push(errorCb)
   }
 
+  // A路由过渡到B路由的逻辑
   transitionTo (
     location: RawLocation,
     onComplete?: Function,
@@ -87,6 +88,7 @@ export class History {
     let route
     // catch redirect option https://github.com/vuejs/vue-router/issues/3201
     try {
+      // 匹配到要跳的路由
       route = this.router.match(location, this.current)
     } catch (e) {
       this.errorCbs.forEach(cb => {

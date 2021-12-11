@@ -48,6 +48,8 @@ export default class VueRouter {
     this.beforeHooks = []
     this.resolveHooks = []
     this.afterHooks = []
+
+    // 传入路由配置数组，创建matcher
     this.matcher = createMatcher(options.routes || [], this)
 
     let mode = options.mode || 'hash'
@@ -81,6 +83,7 @@ export default class VueRouter {
     }
   }
 
+  // 匹配路由
   match (raw: RawLocation, current?: Route, redirectedFrom?: Location): Route {
     return this.matcher.match(raw, current, redirectedFrom)
   }
@@ -172,6 +175,7 @@ export default class VueRouter {
     this.history.onError(errorCb)
   }
 
+  // router.push
   push (location: RawLocation, onComplete?: Function, onAbort?: Function) {
     // $flow-disable-line
     if (!onComplete && !onAbort && typeof Promise !== 'undefined') {
@@ -264,6 +268,7 @@ export default class VueRouter {
     }
   }
 
+  // addRoutes内部调用了this.matcher.addRoutes
   addRoutes (routes: Array<RouteConfig>) {
     if (process.env.NODE_ENV !== 'production') {
       warn(false, 'router.addRoutes() is deprecated and has been removed in Vue Router 4. Use router.addRoute() instead.')
