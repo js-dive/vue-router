@@ -31,6 +31,8 @@ export function createRouteMap (
   // ensure wildcard routes are always at the end
   for (let i = 0, l = pathList.length; i < l; i++) {
     if (pathList[i] === '*') {
+      // 找到*匹配到的路由，然后把这个路由放到整个路由表的最后
+      // 以确保它确实是路由表中的最后一个配置
       pathList.push(pathList.splice(i, 1)[0])
       l--
       i--
