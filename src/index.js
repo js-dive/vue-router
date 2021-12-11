@@ -51,6 +51,8 @@ export default class VueRouter {
     this.matcher = createMatcher(options.routes || [], this)
 
     let mode = options.mode || 'hash'
+
+    // 检查浏览器是否支持HistoryAPI，不支持的话，即使传入mode为history，也将会回落到hash
     this.fallback =
       mode === 'history' && !supportsPushState && options.fallback !== false
     if (this.fallback) {
@@ -61,6 +63,7 @@ export default class VueRouter {
     }
     this.mode = mode
 
+    // 根据mode来创建history
     switch (mode) {
       case 'history':
         this.history = new HTML5History(this, options.base)
@@ -109,6 +112,7 @@ export default class VueRouter {
       if (!this.app) this.history.teardown()
     })
 
+    // 初始化过一次就不必再初始化了
     // main app previously initialized
     // return as we don't need to set up new history listener
     if (this.app) {
@@ -133,6 +137,7 @@ export default class VueRouter {
         history.setupListeners()
         handleInitialScroll(routeOrError)
       }
+      // 初始化后执行一次路由过渡
       history.transitionTo(
         history.getCurrentLocation(),
         setupListeners,
