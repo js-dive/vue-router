@@ -49,15 +49,19 @@ export function createMatcher (
     return pathList.map(path => pathMap[path])
   }
 
+  // 根据传入的路径/选项，计算出最终要跳转的路由
   function match (
     raw: RawLocation,
     currentRoute?: Route,
     redirectedFrom?: Location
   ): Route {
+    // raw可能是表示路径的字符串，也可能是跳转对象；此处用于整理、统一location的格式，并进行接下来的跳转
     const location = normalizeLocation(raw, currentRoute, false, router)
     const { name } = location
 
     if (name) {
+      // 如果能拿到name，直接就去路由表里找对应路由
+      // TODO:
       const record = nameMap[name]
       if (process.env.NODE_ENV !== 'production') {
         warn(record, `Route with name '${name}' does not exist`)
@@ -82,6 +86,8 @@ export function createMatcher (
       location.path = fillParams(record.path, location.params, `named route "${name}"`)
       return _createRoute(record, location, redirectedFrom)
     } else if (location.path) {
+      // 如果没拿到name，但拿到了path
+      // TODO:
       location.params = {}
       for (let i = 0; i < pathList.length; i++) {
         const path = pathList[i]

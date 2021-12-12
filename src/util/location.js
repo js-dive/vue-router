@@ -13,11 +13,15 @@ export function normalizeLocation (
   append: ?boolean,
   router: ?VueRouter
 ): Location {
+  // 辅助函数调用可参照测试用例
+
   let next: Location = typeof raw === 'string' ? { path: raw } : raw
   // named target
   if (next._normalized) {
+    // 对于已经被整理过的location，可以直接返回
     return next
   } else if (next.name) {
+    // 跳转参数中，路由name优先级最高。如果传入了name，就看有没有传params
     next = extend({}, raw)
     const params = next.params
     if (params && typeof params === 'object') {
