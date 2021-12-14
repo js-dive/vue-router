@@ -66,9 +66,9 @@ export class History {
 
   onReady (cb: Function, errorCb: ?Function) {
     if (this.ready) {
-      cb()
+      cb() // 已经就绪的情况下，直接执行传入的回调函数
     } else {
-      this.readyCbs.push(cb)
+      this.readyCbs.push(cb) // 否则还是先存起来
       if (errorCb) {
         this.readyErrorCbs.push(errorCb)
       }
@@ -91,13 +91,16 @@ export class History {
       // 匹配到要跳的路由
       route = this.router.match(location, this.current)
     } catch (e) {
+      // 匹配不到，只好抛错
       this.errorCbs.forEach(cb => {
         cb(e)
       })
       // Exception should still be thrown
       throw e
     }
+    // 前一路由就变成了当前路由
     const prev = this.current
+    // 确认执行过渡
     this.confirmTransition(
       route,
       () => {
@@ -140,6 +143,7 @@ export class History {
     const current = this.current
     this.pending = route
     const abort = err => {
+      // 跳转中断时执行
       // changed after adding errors with
       // https://github.com/vuejs/vue-router/pull/3047 before that change,
       // redirect and aborted navigation would produce an err == null
@@ -157,8 +161,11 @@ export class History {
       }
       onAbort && onAbort(err)
     }
+    // 匹配到的路由
     const lastRouteIndex = route.matched.length - 1
+    // 当前路由
     const lastCurrentIndex = current.matched.length - 1
+    // 路径完全相同的情况下
     if (
       isSameRoute(route, current) &&
       // in the case the route map has been dynamically appended to
@@ -169,6 +176,7 @@ export class History {
       if (route.hash) {
         handleScroll(this.router, current, route, false)
       }
+      // 直接执行abort，表示不必跳转
       return abort(createNavigationDuplicatedError(current, route))
     }
 

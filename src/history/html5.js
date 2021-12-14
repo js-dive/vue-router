@@ -55,6 +55,7 @@ export class HTML5History extends History {
     window.history.go(n)
   }
 
+  //
   push (location: RawLocation, onComplete?: Function, onAbort?: Function) {
     const { current: fromRoute } = this
     this.transitionTo(location, route => {
