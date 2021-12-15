@@ -81,10 +81,11 @@ export class History {
 
   // A路由过渡到B路由的逻辑
   transitionTo (
-    location: RawLocation,
-    onComplete?: Function,
-    onAbort?: Function
+    location: RawLocation, // location
+    onComplete?: Function, // 确认跳转回调
+    onAbort?: Function // 跳转中断回调
   ) {
+    // 前置处理 - 匹配到要跳转的路由
     let route
     // catch redirect option https://github.com/vuejs/vue-router/issues/3201
     try {
@@ -103,6 +104,7 @@ export class History {
     // 确认执行过渡
     this.confirmTransition(
       route,
+      // 跳转成功回调
       () => {
         this.updateRoute(route)
         onComplete && onComplete(route)
@@ -119,6 +121,7 @@ export class History {
           })
         }
       },
+      // 跳转失败回调
       err => {
         if (onAbort) {
           onAbort(err)
@@ -172,7 +175,7 @@ export class History {
       lastRouteIndex === lastCurrentIndex &&
       route.matched[lastRouteIndex] === current.matched[lastCurrentIndex]
     ) {
-      this.ensureURL()
+      this.ensureURL() // TODO:
       if (route.hash) {
         handleScroll(this.router, current, route, false)
       }
@@ -243,7 +246,7 @@ export class History {
           return abort(createNavigationCancelledError(current, route))
         }
         this.pending = null
-        onComplete(route)
+        onComplete(route) // 跳转成功
         if (this.router.app) {
           this.router.app.$nextTick(() => {
             handleRouteEntered(route)
