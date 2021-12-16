@@ -183,11 +183,16 @@ export class History {
       return abort(createNavigationDuplicatedError(current, route))
     }
 
+    // 通过比较当前的和新的匹配到的路由，可以比较出路由的三种异动
+    // update - 发生更新的路由
+    // deactivated - 失活的路由
+    // activated - 激活的路由
     const { updated, deactivated, activated } = resolveQueue(
       this.current.matched,
       route.matched
     )
 
+    // 这里看起来是对将要执行的路由钩子（路由守卫）进行排序
     const queue: Array<?NavigationGuard> = [].concat(
       // in-component leave guards
       extractLeaveGuards(deactivated),
