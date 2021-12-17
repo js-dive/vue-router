@@ -17,6 +17,7 @@ export class HashHistory extends History {
     ensureSlash()
   }
 
+  // 页面进入时首次初始化listener
   // this is delayed until the app mounts
   // to avoid the hashchange listener being fired too early
   setupListeners () {
@@ -32,8 +33,11 @@ export class HashHistory extends History {
       this.listeners.push(setupScroll())
     }
 
+    // popstate/hashchange 处理函数
     const handleRoutingEvent = () => {
       const current = this.current
+      // 如果这里发现hash不是以/开头的，那就什么也不做，同时跳转路由确保路由以/开头
+      // 转换类似：#12345 -> #/12345
       if (!ensureSlash()) {
         return
       }
@@ -41,6 +45,7 @@ export class HashHistory extends History {
         if (supportsScroll) {
           handleScroll(this.router, route, current, true)
         }
+        // 不支持history时，将会使用window.location.replace来进行跳转
         if (!supportsPushState) {
           replaceHash(route.fullPath)
         }
@@ -106,15 +111,19 @@ function checkFallback (base) {
   }
 }
 
+// 检查并确保页面链接中包含hash
 function ensureSlash (): boolean {
   const path = getHash()
+  // 如果得到的hash以/开头，说明hash是正确的，此时不必做任何事
   if (path.charAt(0) === '/') {
     return true
   }
+  // 如果不是的话，需要给路径前拼上/并跳转一下
   replaceHash('/' + path)
   return false
 }
 
+// 获得路由的hash，也就是第一个#之后的所有字符。
 export function getHash (): string {
   // We can't use window.location.hash here because it's not
   // consistent across browsers - Firefox will pre-decode it!
