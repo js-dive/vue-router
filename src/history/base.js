@@ -183,10 +183,7 @@ export class History {
       return abort(createNavigationDuplicatedError(current, route))
     }
 
-    // 通过比较当前的和新的匹配到的路由，可以比较出路由的三种异动
-    // update - 发生更新的路由
-    // deactivated - 失活的路由
-    // activated - 激活的路由
+    // 根据新旧路由比较出路由的三种异动，见函数定义
     const { updated, deactivated, activated } = resolveQueue(
       this.current.matched,
       route.matched
@@ -305,6 +302,13 @@ function normalizeBase (base: ?string): string {
   return base.replace(/\/$/, '')
 }
 
+// 通过比较当前的和新的匹配到的路由，可以比较出路由的三种异动
+// update - 发生更新的路由
+// deactivated - 失活的路由
+// activated - 激活的路由
+// 例如：
+// 从 /foo 进入 /foo/bar 时：/foo 更新，/foo/bar激活
+// 从 /foo/bar 返回 /foo 时：/foo 更新，/foo/bar失活
 function resolveQueue (
   current: Array<RouteRecord>,
   next: Array<RouteRecord>
