@@ -71,6 +71,9 @@ export class History {
   }
 
   // A路由过渡到B路由的逻辑
+  // 当使用hashchange来作为路由跳转底层实现的时候，当在页面上点击元素触发路由跳转（执行this.push/this.replace）后，实测该函数会触发两次：
+  // 第一次由this.push/this.replace主动调用，此时路由可以正常跳转到所需路由
+  // 第二次是hashchange事件触发后，被事件处理函数 - handleRoutingEvent调用，然后将会进入onAbort回调（传给this.confirmTransition，在内部进行调用）。但由于handleRoutingEvent调用transitionTo时没有传入onAbort回调，因此错误被吞掉了，不会有任何提示
   transitionTo (
     location: RawLocation, // location
     onComplete?: Function, // 确认跳转回调
@@ -92,13 +95,14 @@ export class History {
     }
     // 前一路由就变成了当前路由
     const prev = this.current
+    // 如果匹配到了路由，才会进行接下来的过渡
     // 确认执行过渡
     this.confirmTransition(
       route,
       // 跳转成功回调
       () => {
         this.updateRoute(route)
-        onComplete && onComplete(route)
+        onComplete && onComplete(route) // 最终传入的onComplete函数在此执行
         this.ensureURL()
         this.router.afterHooks.forEach(hook => {
           hook && hook(route, prev)
@@ -137,7 +141,7 @@ export class History {
     const current = this.current
     this.pending = route
     const abort = err => {
-      // 跳转中断时执行
+      // 执行abort时，中断跳转
       // changed after adding errors with
       // https://github.com/vuejs/vue-router/pull/3047 before that change,
       // redirect and aborted navigation would produce an err == null
@@ -170,7 +174,8 @@ export class History {
       if (route.hash) {
         handleScroll(this.router, current, route, false)
       }
-      // 直接执行abort，表示不必跳转
+      // 会调用中断跳转函数
+      // hash路由，重复跳转时将会走到这里
       return abort(createNavigationDuplicatedError(current, route))
     }
     // -------- 忽略所有路由钩子开始 --------

@@ -14,6 +14,7 @@ export class HashHistory extends History {
     if (fallback && checkFallback(this.base)) {
       return
     }
+    // hash 路由在构建时首先会ensure，以确保目前地址栏中地址格式正确，然后才进行setupListeners的操作
     ensureSlash()
   }
 
@@ -33,7 +34,10 @@ export class HashHistory extends History {
       this.listeners.push(setupScroll())
     }
 
-    // popstate/hashchange 处理函数
+    // popstate/hashchange 处理函数，主要用于监听点击浏览器前进或后退按钮，以及手动在地址栏中改变hash的情况
+    // 如果不添加hashchange事件，浏览器前进后退按钮将会无效
+    // 表现为：前进/后退按钮按下（或手动在地址栏中输入改变hash），浏览器地址栏中的地址会产生变化，但视图不会更新
+    // 但此时点击视图中触发路由变化的地方，视图还是可以更新
     const handleRoutingEvent = () => {
       const current = this.current
       // 如果这里发现hash不是以/开头的，那就什么也不做，同时跳转路由确保路由以/开头
@@ -49,7 +53,7 @@ export class HashHistory extends History {
         if (!supportsPushState) {
           replaceHash(route.fullPath)
         }
-      })
+      }) // 这里没有传入onAbort回调，因此onAbort时不会发生任何事
     }
     const eventType = supportsPushState ? 'popstate' : 'hashchange'
     window.addEventListener(

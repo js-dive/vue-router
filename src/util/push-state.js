@@ -1,27 +1,26 @@
 /* @flow */
 
-import { inBrowser } from './dom'
 import { saveScrollPosition } from './scroll'
 import { genStateKey, setStateKey, getStateKey } from './state-key'
 import { extend } from './misc'
 
 // 检查浏览器对于History的支持性
-export const supportsPushState =
-  inBrowser &&
-  (function () {
-    const ua = window.navigator.userAgent
+export const supportsPushState = false
+// inBrowser &&
+// (function () {
+//   const ua = window.navigator.userAgent
 
-    if (
-      (ua.indexOf('Android 2.') !== -1 || ua.indexOf('Android 4.0') !== -1) &&
-      ua.indexOf('Mobile Safari') !== -1 &&
-      ua.indexOf('Chrome') === -1 &&
-      ua.indexOf('Windows Phone') === -1
-    ) {
-      return false
-    }
+//   if (
+//     (ua.indexOf('Android 2.') !== -1 || ua.indexOf('Android 4.0') !== -1) &&
+//     ua.indexOf('Mobile Safari') !== -1 &&
+//     ua.indexOf('Chrome') === -1 &&
+//     ua.indexOf('Windows Phone') === -1
+//   ) {
+//     return false
+//   }
 
-    return window.history && typeof window.history.pushState === 'function'
-  })()
+//   return window.history && typeof window.history.pushState === 'function'
+// })()
 
 export function pushState (url?: string, replace?: boolean) {
   saveScrollPosition()
