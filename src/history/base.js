@@ -187,13 +187,80 @@ export class History {
       // hash路由，重复跳转时将会走到这里
       return abort(createNavigationDuplicatedError(current, route))
     }
-    // -------- 忽略所有路由钩子开始 --------
-    if (this.pending !== route) {
-      return abort(createNavigationCancelledError(current, route))
+
+    // 根据新旧路由比较出路由的三种异动，见函数定义
+    const { updated, deactivated, activated } = resolveQueue(
+      this.current.matched,
+      route.matched
+    )
+
+    // 这里看起来是对将要执行的路由钩子（路由守卫）进行排序
+    const queue: Array<?NavigationGuard> = [].concat(
+      // in-component leave guards
+      extractLeaveGuards(deactivated),
+      // global before hooks
+      this.router.beforeHooks,
+      // in-component update hooks
+      extractUpdateHooks(updated),
+      // in-config enter guards
+      activated.map(m => m.beforeEnter),
+      // async components
+      resolveAsyncComponents(activated)
+    )
+
+    const iterator = (hook: NavigationGuard, next) => {
+      if (this.pending !== route) {
+        return abort(createNavigationCancelledError(current, route))
+      }
+      try {
+        hook(route, current, (to: any) => {
+          if (to === false) {
+            // next(false) -> abort navigation, ensure current URL
+            this.ensureURL(true)
+            abort(createNavigationAbortedError(current, route))
+          } else if (isError(to)) {
+            this.ensureURL(true)
+            abort(to)
+          } else if (
+            typeof to === 'string' ||
+            (typeof to === 'object' &&
+              (typeof to.path === 'string' || typeof to.name === 'string'))
+          ) {
+            // next('/') or next({ path: '/' }) -> redirect
+            abort(createNavigationRedirectedError(current, route))
+            if (typeof to === 'object' && to.replace) {
+              this.replace(to)
+            } else {
+              this.push(to)
+            }
+          } else {
+            // confirm transition and pass on the value
+            next(to)
+          }
+        })
+      } catch (e) {
+        abort(e)
+      }
     }
-    this.pending = null
-    onComplete(route) // 跳转成功
-    // -------- 忽略所有路由钩子结束 --------
+
+    runQueue(queue, iterator, () => {
+      // wait until async components are resolved before
+      // extracting in-component enter guards
+      const enterGuards = extractEnterGuards(activated)
+      const queue = enterGuards.concat(this.router.resolveHooks)
+      runQueue(queue, iterator, () => {
+        if (this.pending !== route) {
+          return abort(createNavigationCancelledError(current, route))
+        }
+        this.pending = null
+        onComplete(route) // 跳转成功
+        if (this.router.app) {
+          this.router.app.$nextTick(() => {
+            handleRouteEntered(route)
+          })
+        }
+      })
+    })
   }
 
   // 更新页面中的路由
