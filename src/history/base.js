@@ -84,7 +84,7 @@ export class History {
     // catch redirect option https://github.com/vuejs/vue-router/issues/3201
     try {
       // 匹配到要跳的路由
-      route = this.router.match(location, this.current)
+      route = this.router.match(location, this.current) // 内部调用createRoute进行创建，跳转成功后将被赋值给app的$route属性
     } catch (e) {
       // 匹配不到，只好抛错
       this.errorCbs.forEach(cb => {

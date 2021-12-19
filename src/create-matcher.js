@@ -182,6 +182,7 @@ export function createMatcher (
     return _createRoute(null, location)
   }
 
+  // createRoute外部包了一层，用于处理重定向、别名等情况
   function _createRoute (
     record: ?RouteRecord,
     location: Location,

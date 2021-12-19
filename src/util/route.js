@@ -5,6 +5,7 @@ import { stringifyQuery } from './query'
 
 const trailingSlashRE = /\/?$/
 
+// 创建一个表示当前路由跳转信息的对象，如果跳转成功，它将被赋值给app的$route属性
 export function createRoute (
   record: ?RouteRecord,
   location: Location,
