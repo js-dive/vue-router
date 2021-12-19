@@ -101,9 +101,9 @@ export class History {
       route,
       // 跳转成功回调
       () => {
-        this.updateRoute(route)
-        onComplete && onComplete(route) // 最终传入的onComplete函数在此执行
-        this.ensureURL()
+        this.updateRoute(route) // 更新页面中的route以及视图，重新设置app中的$route对象
+        onComplete && onComplete(route) // 最终传入的onComplete函数在此执行 // 用于更新浏览器的历史记录/hash
+        this.ensureURL() // 确保浏览器的hash与当前路由一致，若不一致的话将会更新url
         this.router.afterHooks.forEach(hook => {
           hook && hook(route, prev)
         })
@@ -170,7 +170,7 @@ export class History {
       lastRouteIndex === lastCurrentIndex &&
       route.matched[lastRouteIndex] === current.matched[lastCurrentIndex]
     ) {
-      this.ensureURL() // TODO:
+      this.ensureURL() // 如果路由路径不一致，确保应用中的路径与浏览器的hash是一致的
       if (route.hash) {
         handleScroll(this.router, current, route, false)
       }
@@ -187,6 +187,7 @@ export class History {
     // -------- 忽略所有路由钩子结束 --------
   }
 
+  // 更新页面中的路由
   updateRoute (route: Route) {
     this.current = route
     this.cb && this.cb(route)

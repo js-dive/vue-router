@@ -97,9 +97,11 @@ export class HashHistory extends History {
     window.history.go(n)
   }
 
+  // 确保当前应用中的路径与浏览器中当前的hash是一致的
   ensureURL (push?: boolean) {
     const current = this.current.fullPath
     if (getHash() !== current) {
+      // 如果不一致的话会进行跳转
       push ? pushHash(current) : replaceHash(current)
     }
   }
