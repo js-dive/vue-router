@@ -80,6 +80,7 @@ export default {
     const ariaCurrentValue = classes[exactActiveClass] ? this.ariaCurrentValue : null
 
     const handler = e => {
+      // 点击route-link，触发事件后，来到这里
       if (guardEvent(e)) {
         if (this.replace) {
           router.replace(location, noop)
@@ -189,6 +190,12 @@ export default {
   }
 }
 
+/**
+ * 做一些不跳转条件的判断
+ * 比如用户在按下鼠标的同时也按下了键盘组合键、用户按下了鼠标右键等等
+ * @param {Event} e 键盘或鼠标事件
+ * @returns
+ */
 function guardEvent (e) {
   // don't redirect with control keys
   if (e.metaKey || e.altKey || e.ctrlKey || e.shiftKey) return
