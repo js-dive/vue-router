@@ -1,12 +1,21 @@
 /* @flow */
 
+import { _Vue } from '../install'
 import type Router from '../index'
 import { inBrowser } from '../util/dom'
+import { runQueue } from '../util/async'
 import { warn } from '../util/warn'
-import { START, isSameRoute } from '../util/route'
+import { START, isSameRoute, handleRouteEntered } from '../util/route'
+import {
+  flatten,
+  flatMapComponents,
+  resolveAsyncComponents
+} from '../util/resolve-components'
 import {
   createNavigationDuplicatedError,
   createNavigationCancelledError,
+  createNavigationRedirectedError,
+  createNavigationAbortedError,
   isError,
   isNavigationFailure,
   NavigationFailureType
@@ -230,4 +239,107 @@ function normalizeBase (base: ?string): string {
   }
   // remove trailing slash
   return base.replace(/\/$/, '')
+}
+
+// 通过比较当前的和新的匹配到的路由，可以比较出路由的三种异动
+// update - 发生更新的路由
+// deactivated - 失活的路由
+// activated - 激活的路由
+// 例如：
+// 从 /foo 进入 /foo/bar 时：/foo 更新，/foo/bar激活
+// 从 /foo/bar 返回 /foo 时：/foo 更新，/foo/bar失活
+function resolveQueue (
+  current: Array<RouteRecord>,
+  next: Array<RouteRecord>
+): {
+  updated: Array<RouteRecord>,
+  activated: Array<RouteRecord>,
+  deactivated: Array<RouteRecord>
+} {
+  let i
+  const max = Math.max(current.length, next.length)
+  for (i = 0; i < max; i++) {
+    if (current[i] !== next[i]) {
+      break
+    }
+  }
+  return {
+    updated: next.slice(0, i),
+    activated: next.slice(i),
+    deactivated: current.slice(i)
+  }
+}
+
+function extractGuards (
+  records: Array<RouteRecord>,
+  name: string,
+  bind: Function,
+  reverse?: boolean
+): Array<?Function> {
+  const guards = flatMapComponents(records, (def, instance, match, key) => {
+    const guard = extractGuard(def, name)
+    if (guard) {
+      return Array.isArray(guard)
+        ? guard.map(guard => bind(guard, instance, match, key))
+        : bind(guard, instance, match, key)
+    }
+  })
+  return flatten(reverse ? guards.reverse() : guards)
+}
+
+function extractGuard (
+  def: Object | Function,
+  key: string
+): NavigationGuard | Array<NavigationGuard> {
+  if (typeof def !== 'function') {
+    // extend now so that global mixins are applied.
+    def = _Vue.extend(def)
+  }
+  return def.options[key]
+}
+
+function extractLeaveGuards (deactivated: Array<RouteRecord>): Array<?Function> {
+  return extractGuards(deactivated, 'beforeRouteLeave', bindGuard, true)
+}
+
+function extractUpdateHooks (updated: Array<RouteRecord>): Array<?Function> {
+  return extractGuards(updated, 'beforeRouteUpdate', bindGuard)
+}
+
+function bindGuard (guard: NavigationGuard, instance: ?_Vue): ?NavigationGuard {
+  if (instance) {
+    return function boundRouteGuard () {
+      return guard.apply(instance, arguments)
+    }
+  }
+}
+
+function extractEnterGuards (
+  activated: Array<RouteRecord>
+): Array<?Function> {
+  return extractGuards(
+    activated,
+    'beforeRouteEnter',
+    (guard, _, match, key) => {
+      return bindEnterGuard(guard, match, key)
+    }
+  )
+}
+
+function bindEnterGuard (
+  guard: NavigationGuard,
+  match: RouteRecord,
+  key: string
+): NavigationGuard {
+  return function routeEnterGuard (to, from, next) {
+    return guard(to, from, cb => {
+      if (typeof cb === 'function') {
+        if (!match.enteredCbs[key]) {
+          match.enteredCbs[key] = []
+        }
+        match.enteredCbs[key].push(cb)
+      }
+      next(cb)
+    })
+  }
 }
