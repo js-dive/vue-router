@@ -40,8 +40,10 @@ export class HashHistory extends History {
     // 但此时点击视图中触发路由变化的地方，视图还是可以更新
     const handleRoutingEvent = () => {
       const current = this.current
-      // 如果这里发现hash不是以/开头的，那就什么也不做，同时跳转路由确保路由以/开头
-      // 转换类似：#12345 -> #/12345
+      console.log('Will ensureSlash be executed again?')
+      // 如果这里发现hash不是以/开头的，那就什么也不做，同时（在ensureSlash）执行一次replaceHash跳转，以确保路由以/开头
+      // 跳转类似：#12345 -> #/12345
+      // ensureSlash后，将会导致hashchange处理函数被触发一次
       if (!ensureSlash()) {
         return
       }
@@ -123,7 +125,9 @@ function ensureSlash (): boolean {
     return true
   }
   // 如果不是的话，需要给路径前拼上/并跳转一下
-  replaceHash('/' + path)
+  console.log('beforeReplaceHash')
+  pushHash('/' + path)
+  console.log('afterReplaceHash')
   return false
 }
 
